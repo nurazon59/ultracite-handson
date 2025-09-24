@@ -15,14 +15,15 @@
     "react-dom": "19.1.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.0.0",
+    "@biomejs/biome": "2.2.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "husky": "^9.1.7",
+    "lefthook": "^1.13.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "ultracite": "5.4.4"
+    "ultracite": "5.3.11"
   }
 }
