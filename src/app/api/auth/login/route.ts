@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     });
 
     // passwordHashを除外してレスポンス
-    const { passwordHash, ...userWithoutPassword } = user;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
 
     // レスポンス作成
     const response = NextResponse.json(
@@ -71,8 +71,7 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
-  } catch (error) {
-    console.error("Login error:", error);
+  } catch (_error) {
     return NextResponse.json(
       { error: "ログインに失敗しました" },
       { status: 500 }

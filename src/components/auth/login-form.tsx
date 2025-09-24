@@ -47,10 +47,8 @@ export function LoginForm() {
 
       router.push("/bookmarks");
       router.refresh();
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "ログインに失敗しました"
-      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "ログインに失敗しました");
     } finally {
       setIsLoading(false);
     }

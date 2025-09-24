@@ -27,11 +27,9 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/login", request.url));
       }
     }
-  } else {
+  } else if (isProtectedPage) {
     // 未認証ユーザーは保護されたページにアクセスできない
-    if (isProtectedPage) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();

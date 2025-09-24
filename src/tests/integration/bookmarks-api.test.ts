@@ -9,19 +9,31 @@ import { GET, POST } from "@/app/api/bookmarks/route";
 import { createToken } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-interface TestUser {
+// HTTPステータスコード定数
+const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  NOT_FOUND: 404,
+} as const;
+
+// 正規表現定数
+const INVALID_URL_REGEX = /無効なURL/;
+
+type TestUser = {
   id: string;
   email: string;
   name: string;
   passwordHash: string;
-}
+};
 
-interface BookmarkBody {
+type BookmarkBody = {
   url: string;
   title: string;
   description?: string;
   isPublic?: boolean;
-}
+};
 
 // テスト用のNextRequestを作成するヘルパー関数
 function createTestRequest(
@@ -30,12 +42,14 @@ function createTestRequest(
   token?: string
 ): NextRequest {
   const url = "http://localhost:3000/api/test";
-  const headers = new Headers({
-    "Content-Type": "application/json",
-  });
 
+  // Headersオブジェクトを作成
+  const headers = new Headers();
+  headers.set("Content-Type", "application/json");
+
+  // テスト環境用の特別なヘッダーでトークンを送信
   if (token) {
-    headers.append("Cookie", `token=${token}`);
+    headers.set("x-test-token", token);
   }
 
   return new NextRequest(url, {
@@ -84,7 +98,7 @@ describe("ブックマークAPI", () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(HTTP_STATUS.CREATED);
       expect(data.bookmark).toMatchObject({
         url: bookmarkData.url,
         title: bookmarkData.title,
@@ -104,7 +118,7 @@ describe("ブックマークAPI", () => {
       const request = createTestRequest("POST", bookmarkData);
       const response = await POST(request);
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
     });
 
     it("必須項目が不足している場合はエラーを返す", async () => {
@@ -116,7 +130,7 @@ describe("ブックマークAPI", () => {
       for (const body of invalidRequests) {
         const request = createTestRequest("POST", body, authToken);
         const response = await POST(request);
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
       }
     });
 
@@ -130,8 +144,8 @@ describe("ブックマークAPI", () => {
       const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(data.error).toMatch(/無効なURL/);
+      expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+      expect(data.error).toMatch(INVALID_URL_REGEX);
     });
   });
 
@@ -170,7 +184,7 @@ describe("ブックマークAPI", () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.bookmarks).toHaveLength(3);
       expect(data.bookmarks[0]).toHaveProperty("url");
       expect(data.bookmarks[0]).toHaveProperty("title");
@@ -182,7 +196,7 @@ describe("ブックマークAPI", () => {
       const request = createTestRequest("GET");
       const response = await GET(request);
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
     });
   });
 
@@ -203,11 +217,11 @@ describe("ブックマークAPI", () => {
     it("認証されたユーザーは自分のブックマークを取得できる", async () => {
       const request = createTestRequest("GET", undefined, authToken);
       const response = await getBookmark(request, {
-        params: { id: bookmark.id },
+        params: Promise.resolve({ id: bookmark.id }),
       });
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.bookmark).toMatchObject({
         id: bookmark.id,
         url: "https://example.com",
@@ -236,10 +250,10 @@ describe("ブックマークAPI", () => {
 
       const request = createTestRequest("GET", undefined, authToken);
       const response = await getBookmark(request, {
-        params: { id: otherBookmark.id },
+        params: Promise.resolve({ id: otherBookmark.id }),
       });
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
     });
   });
 
@@ -268,10 +282,12 @@ describe("ブックマークAPI", () => {
       };
 
       const request = createTestRequest("PUT", updateData, authToken);
-      const response = await PUT(request, { params: { id: bookmark.id } });
+      const response = await PUT(request, {
+        params: Promise.resolve({ id: bookmark.id }),
+      });
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.bookmark).toMatchObject({
         id: bookmark.id,
         url: "https://example.com", // URLは変更されない
@@ -289,10 +305,12 @@ describe("ブックマークAPI", () => {
       };
 
       const request = createTestRequest("PUT", updateData, authToken);
-      const response = await PUT(request, { params: { id: bookmark.id } });
+      const response = await PUT(request, {
+        params: Promise.resolve({ id: bookmark.id }),
+      });
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.bookmark.url).toBe("https://example.com"); // 元のURLのまま
     });
   });
@@ -312,10 +330,12 @@ describe("ブックマークAPI", () => {
 
     it("認証されたユーザーは自分のブックマークを削除できる", async () => {
       const request = createTestRequest("DELETE", undefined, authToken);
-      const response = await DELETE(request, { params: { id: bookmark.id } });
+      const response = await DELETE(request, {
+        params: Promise.resolve({ id: bookmark.id }),
+      });
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.message).toBe("ブックマークを削除しました");
 
       // データベースから削除されていることを確認
@@ -344,10 +364,10 @@ describe("ブックマークAPI", () => {
 
       const request = createTestRequest("DELETE", undefined, authToken);
       const response = await DELETE(request, {
-        params: { id: otherBookmark.id },
+        params: Promise.resolve({ id: otherBookmark.id }),
       });
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(HTTP_STATUS.NOT_FOUND);
 
       // データベースにまだ存在することを確認
       const existingBookmark = await prisma.bookmark.findUnique({

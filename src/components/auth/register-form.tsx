@@ -48,8 +48,8 @@ export function RegisterForm() {
 
       router.push("/bookmarks");
       router.refresh();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "登録に失敗しました");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "登録に失敗しました");
     } finally {
       setIsLoading(false);
     }

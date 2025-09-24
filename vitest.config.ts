@@ -8,6 +8,12 @@ export default defineConfig({
     environment: "happy-dom",
     globals: true,
     setupFiles: ["./src/tests/setup.ts"],
+    pool: "forks",
+    poolOptions: {
+      forks: {
+        singleFork: true, // すべてのテストを単一のフォークで実行
+      },
+    },
   },
   resolve: {
     alias: {

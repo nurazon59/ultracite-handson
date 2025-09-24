@@ -1,12 +1,12 @@
-export interface User {
+export type User = {
   id: string;
   email: string;
   name: string;
   createdAt: Date;
   updatedAt: Date;
-}
+};
 
-export interface Bookmark {
+export type Bookmark = {
   id: string;
   userId: string;
   url: string;
@@ -17,16 +17,16 @@ export interface Bookmark {
   createdAt: Date;
   updatedAt: Date;
   user?: User;
-}
+};
 
-export interface PaginationParams {
+export type PaginationParams = {
   page?: number;
   limit?: number;
-}
+};
 
-export interface PaginationResult {
+export type PaginationResult = {
   page: number;
   limit: number;
   total: number;
   totalPages: number;
-}
+};

@@ -1,5 +1,4 @@
 import { Plus } from "lucide-react";
-import { cookies } from "next/headers";
 import Link from "next/link";
 import { BookmarkCard } from "@/components/bookmarks/bookmark-card";
 import { Button } from "@/components/ui/button";

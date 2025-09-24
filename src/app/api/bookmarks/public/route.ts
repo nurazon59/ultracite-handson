@@ -6,8 +6,8 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get("q");
     const userId = searchParams.get("userId");
-    const page = Number.parseInt(searchParams.get("page") || "1");
-    const limit = Number.parseInt(searchParams.get("limit") || "20");
+    const page = Number.parseInt(searchParams.get("page") || "1", 10);
+    const limit = Number.parseInt(searchParams.get("limit") || "20", 10);
 
     // 検索条件の構築
     const where: Record<string, unknown> = {
@@ -58,8 +58,7 @@ export async function GET(request: NextRequest) {
       bookmarks,
       pagination,
     });
-  } catch (error) {
-    console.error("Get public bookmarks error:", error);
+  } catch (_error) {
     return NextResponse.json(
       { error: "公開ブックマークの取得に失敗しました" },
       { status: 500 }

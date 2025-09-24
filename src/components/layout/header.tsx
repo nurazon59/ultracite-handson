@@ -1,11 +1,41 @@
 "use client";
 
-import { Bookmark, LogOut, Menu, X } from "lucide-react";
+import { Bookmark, LogOut, Menu } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+
+type NavLinksProps = {
+  onLinkClick?: () => void;
+};
+
+const NavLinks = ({ onLinkClick }: NavLinksProps) => (
+  <>
+    <Link
+      className="flex items-center gap-2 font-medium text-sm transition-colors hover:text-primary"
+      href="/bookmarks"
+      onClick={onLinkClick}
+    >
+      マイブックマーク
+    </Link>
+    <Link
+      className="flex items-center gap-2 font-medium text-sm transition-colors hover:text-primary"
+      href="/public"
+      onClick={onLinkClick}
+    >
+      公開ブックマーク
+    </Link>
+    <Link
+      className="flex items-center gap-2 font-medium text-sm transition-colors hover:text-primary"
+      href="/bookmarks/new"
+      onClick={onLinkClick}
+    >
+      新規作成
+    </Link>
+  </>
+);
 
 export function Header() {
   const router = useRouter();
@@ -25,38 +55,12 @@ export function Header() {
 
       router.push("/login");
       router.refresh();
-    } catch (error) {
+    } catch (_error) {
       alert("ログアウトに失敗しました");
     } finally {
       setIsLoggingOut(false);
     }
   }
-
-  const NavLinks = () => (
-    <>
-      <Link
-        className="flex items-center gap-2 font-medium text-sm transition-colors hover:text-primary"
-        href="/bookmarks"
-        onClick={() => setIsOpen(false)}
-      >
-        マイブックマーク
-      </Link>
-      <Link
-        className="flex items-center gap-2 font-medium text-sm transition-colors hover:text-primary"
-        href="/public"
-        onClick={() => setIsOpen(false)}
-      >
-        公開ブックマーク
-      </Link>
-      <Link
-        className="flex items-center gap-2 font-medium text-sm transition-colors hover:text-primary"
-        href="/bookmarks/new"
-        onClick={() => setIsOpen(false)}
-      >
-        新規作成
-      </Link>
-    </>
-  );
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -91,7 +95,7 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="right">
               <nav className="mt-6 flex flex-col gap-4">
-                <NavLinks />
+                <NavLinks onLinkClick={() => setIsOpen(false)} />
                 <Button
                   className="justify-start"
                   disabled={isLoggingOut}

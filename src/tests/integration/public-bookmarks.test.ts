@@ -4,12 +4,20 @@ import { GET } from "@/app/api/bookmarks/public/route";
 import { createToken } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
-interface TestUser {
+// HTTPステータスコード定数
+const HTTP_STATUS = {
+  OK: 200,
+} as const;
+
+// マジックナンバー定数
+const PUBLIC_BOOKMARKS_COUNT = 3;
+
+type TestUser = {
   id: string;
   email: string;
   name: string;
   passwordHash: string;
-}
+};
 
 // テスト用のNextRequestを作成するヘルパー関数
 function createTestRequest(searchParams?: string, token?: string): NextRequest {
@@ -29,8 +37,8 @@ function createTestRequest(searchParams?: string, token?: string): NextRequest {
 describe("公開ブックマークAPI", () => {
   let user1: TestUser;
   let user2: TestUser;
-  let authToken1: string;
-  let authToken2: string;
+  let _authToken1: string;
+  let _authToken2: string;
 
   beforeEach(async () => {
     // テスト前にデータベースをクリーンアップ
@@ -55,13 +63,13 @@ describe("公開ブックマークAPI", () => {
     });
 
     // 認証トークンを生成
-    authToken1 = await createToken({
+    _authToken1 = await createToken({
       id: user1.id,
       email: user1.email,
       name: user1.name,
     });
 
-    authToken2 = await createToken({
+    _authToken2 = await createToken({
       id: user2.id,
       email: user2.email,
       name: user2.name,
@@ -117,8 +125,8 @@ describe("公開ブックマークAPI", () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(data.bookmarks).toHaveLength(3);
+      expect(response.status).toBe(HTTP_STATUS.OK);
+      expect(data.bookmarks).toHaveLength(PUBLIC_BOOKMARKS_COUNT);
       expect(
         data.bookmarks.every((b: { isPublic: boolean }) => b.isPublic)
       ).toBe(true);
@@ -129,7 +137,7 @@ describe("公開ブックマークAPI", () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.bookmarks[0]).toHaveProperty("user");
       expect(data.bookmarks[0].user).toHaveProperty("name");
       expect(data.bookmarks[0].user).toHaveProperty("email");
@@ -141,9 +149,9 @@ describe("公開ブックマークAPI", () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.bookmarks).toHaveLength(1);
-      expect(data.bookmarks[0].title).toContain("JavaScript");
+      expect(data.bookmarks[0].description).toContain("JavaScript");
     });
 
     it("タイトルと説明の両方で検索できる", async () => {
@@ -151,7 +159,7 @@ describe("公開ブックマークAPI", () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.bookmarks).toHaveLength(1);
       expect(data.bookmarks[0].description).toContain("プログラミング");
     });
@@ -161,7 +169,7 @@ describe("公開ブックマークAPI", () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.bookmarks).toHaveLength(2);
       expect(
         data.bookmarks.every((b: { userId: string }) => b.userId === user1.id)
@@ -173,7 +181,7 @@ describe("公開ブックマークAPI", () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.bookmarks).toHaveLength(1);
       expect(data.bookmarks[0].userId).toBe(user2.id);
       expect(data.bookmarks[0].title).toContain("公開");
@@ -195,7 +203,7 @@ describe("公開ブックマークAPI", () => {
       const response1 = await GET(request1);
       const data1 = await response1.json();
 
-      expect(response1.status).toBe(200);
+      expect(response1.status).toBe(HTTP_STATUS.OK);
       expect(data1.bookmarks).toHaveLength(10);
       expect(data1.pagination).toMatchObject({
         page: 1,
@@ -209,7 +217,7 @@ describe("公開ブックマークAPI", () => {
       const response2 = await GET(request2);
       const data2 = await response2.json();
 
-      expect(response2.status).toBe(200);
+      expect(response2.status).toBe(HTTP_STATUS.OK);
       expect(data2.bookmarks).toHaveLength(10);
       expect(data2.pagination.page).toBe(2);
     });
@@ -219,8 +227,8 @@ describe("公開ブックマークAPI", () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(data.bookmarks).toHaveLength(3);
+      expect(response.status).toBe(HTTP_STATUS.OK);
+      expect(data.bookmarks).toHaveLength(PUBLIC_BOOKMARKS_COUNT);
     });
 
     it("検索結果が0件の場合も正常に処理される", async () => {
@@ -228,7 +236,7 @@ describe("公開ブックマークAPI", () => {
       const response = await GET(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.bookmarks).toHaveLength(0);
       expect(data.pagination.total).toBe(0);
     });

@@ -1,7 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BookmarkCard } from "@/components/bookmarks/bookmark-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,7 @@ export default function PublicBookmarksPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchBookmarks();
-  }, [currentPage, searchQuery]);
-
-  async function fetchBookmarks() {
+  const fetchBookmarks = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
@@ -34,12 +30,16 @@ export default function PublicBookmarksPage() {
         setBookmarks(data.bookmarks);
         setTotalPages(data.pagination.totalPages);
       }
-    } catch (error) {
-      console.error("Failed to fetch bookmarks:", error);
+    } catch (_error) {
+      // エラーハンドリングは無視（空のブックマークリストを表示）
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [currentPage, searchQuery]);
+
+  useEffect(() => {
+    fetchBookmarks();
+  }, [fetchBookmarks]);
 
   function handleSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -67,53 +67,61 @@ export default function PublicBookmarksPage() {
         </form>
       </div>
 
-      {isLoading ? (
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">読み込み中...</p>
-        </div>
-      ) : bookmarks.length === 0 ? (
-        <div className="py-12 text-center">
-          <p className="text-muted-foreground">
-            {searchQuery
-              ? "検索結果がありません"
-              : "公開ブックマークがまだありません"}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {bookmarks.map((bookmark) => (
-              <BookmarkCard
-                bookmark={bookmark}
-                isOwner={false}
-                key={bookmark.id}
-              />
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2">
-              <Button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(currentPage - 1)}
-                variant="outline"
-              >
-                前のページ
-              </Button>
-              <span className="flex items-center px-4">
-                {currentPage} / {totalPages}
-              </span>
-              <Button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
-                variant="outline"
-              >
-                次のページ
-              </Button>
+      {(() => {
+        if (isLoading) {
+          return (
+            <div className="py-12 text-center">
+              <p className="text-muted-foreground">読み込み中...</p>
             </div>
-          )}
-        </>
-      )}
+          );
+        }
+        if (bookmarks.length === 0) {
+          return (
+            <div className="py-12 text-center">
+              <p className="text-muted-foreground">
+                {searchQuery
+                  ? "検索結果がありません"
+                  : "公開ブックマークがまだありません"}
+              </p>
+            </div>
+          );
+        }
+        return (
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {bookmarks.map((bookmark) => (
+                <BookmarkCard
+                  bookmark={bookmark}
+                  isOwner={false}
+                  key={bookmark.id}
+                />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex justify-center gap-2">
+                <Button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  variant="outline"
+                >
+                  前のページ
+                </Button>
+                <span className="flex items-center px-4">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  variant="outline"
+                >
+                  次のページ
+                </Button>
+              </div>
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }

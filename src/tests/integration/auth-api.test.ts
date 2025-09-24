@@ -5,17 +5,38 @@ import { POST as logoutHandler } from "@/app/api/auth/logout/route";
 import { POST as registerHandler } from "@/app/api/auth/register/route";
 import { prisma } from "@/lib/db";
 
+// HTTPステータスコード定数
+const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  NOT_FOUND: 404,
+  INTERNAL_SERVER_ERROR: 500,
+} as const;
+
+// 正規表現定数
+const TOKEN_REGEX = /token=/;
+const HTTP_ONLY_REGEX = /HttpOnly/;
+const SAME_SITE_REGEX = /SameSite=Strict/;
+const ALREADY_REGISTERED_REGEX = /既に登録されています/;
+const INVALID_EMAIL_REGEX = /無効なメールアドレス/;
+const INVALID_CREDENTIALS_REGEX =
+  /メールアドレスまたはパスワードが正しくありません/;
+const TOKEN_EMPTY_REGEX = /token=;/;
+const MAX_AGE_ZERO_REGEX = /Max-Age=0/;
+
 // リクエストボディの型定義
-interface RegisterBody {
+type RegisterBody = {
   email: string;
   password: string;
   name: string;
-}
+};
 
-interface LoginBody {
+type LoginBody = {
   email: string;
   password: string;
-}
+};
 
 // テスト用のNextRequestを作成するヘルパー関数
 function createTestRequest(
@@ -49,7 +70,12 @@ describe("認証API", () => {
       const response = await registerHandler(request);
       const data = await response.json();
 
-      expect(response.status).toBe(201);
+      // デバッグ情報を追加
+      if (response.status !== HTTP_STATUS.CREATED) {
+        console.error("Register error:", data);
+      }
+
+      expect(response.status).toBe(HTTP_STATUS.CREATED);
       expect(data.user).toMatchObject({
         email: requestBody.email,
         name: requestBody.name,
@@ -58,9 +84,9 @@ describe("認証API", () => {
 
       // Cookieにトークンが設定されていることを確認
       const setCookieHeader = response.headers.get("Set-Cookie");
-      expect(setCookieHeader).toMatch(/token=/);
-      expect(setCookieHeader).toMatch(/HttpOnly/);
-      expect(setCookieHeader).toMatch(/SameSite=Strict/);
+      expect(setCookieHeader).toMatch(TOKEN_REGEX);
+      expect(setCookieHeader).toMatch(HTTP_ONLY_REGEX);
+      expect(setCookieHeader).toMatch(SAME_SITE_REGEX);
     });
 
     it("同じメールアドレスで重複登録はできない", async () => {
@@ -79,8 +105,8 @@ describe("認証API", () => {
       const response = await registerHandler(request2);
       const data = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(data.error).toMatch(/既に登録されています/);
+      expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+      expect(data.error).toMatch(ALREADY_REGISTERED_REGEX);
     });
 
     it("必須項目が不足している場合はエラーを返す", async () => {
@@ -96,7 +122,7 @@ describe("認証API", () => {
       for (const body of invalidRequests) {
         const request = createTestRequest(body as RegisterBody);
         const response = await registerHandler(request);
-        expect(response.status).toBe(400);
+        expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
       }
     });
 
@@ -111,8 +137,8 @@ describe("認証API", () => {
       const response = await registerHandler(request);
       const data = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(data.error).toMatch(/無効なメールアドレス/);
+      expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+      expect(data.error).toMatch(INVALID_EMAIL_REGEX);
     });
   });
 
@@ -138,7 +164,7 @@ describe("認証API", () => {
       const response = await loginHandler(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.user).toMatchObject({
         email: testUser.email,
         name: testUser.name,
@@ -146,7 +172,7 @@ describe("認証API", () => {
 
       // Cookieにトークンが設定されていることを確認
       const setCookieHeader = response.headers.get("Set-Cookie");
-      expect(setCookieHeader).toMatch(/token=/);
+      expect(setCookieHeader).toMatch(TOKEN_REGEX);
     });
 
     it("間違ったパスワードではログインできない", async () => {
@@ -158,10 +184,8 @@ describe("認証API", () => {
       const response = await loginHandler(request);
       const data = await response.json();
 
-      expect(response.status).toBe(401);
-      expect(data.error).toMatch(
-        /メールアドレスまたはパスワードが正しくありません/
-      );
+      expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
+      expect(data.error).toMatch(INVALID_CREDENTIALS_REGEX);
     });
 
     it("存在しないユーザーではログインできない", async () => {
@@ -173,10 +197,8 @@ describe("認証API", () => {
       const response = await loginHandler(request);
       const data = await response.json();
 
-      expect(response.status).toBe(401);
-      expect(data.error).toMatch(
-        /メールアドレスまたはパスワードが正しくありません/
-      );
+      expect(response.status).toBe(HTTP_STATUS.UNAUTHORIZED);
+      expect(data.error).toMatch(INVALID_CREDENTIALS_REGEX);
     });
   });
 
@@ -187,13 +209,13 @@ describe("認証API", () => {
       const response = await logoutHandler(request);
       const data = await response.json();
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(HTTP_STATUS.OK);
       expect(data.message).toBe("ログアウトしました");
 
       // Cookieが削除されることを確認
       const setCookieHeader = response.headers.get("Set-Cookie");
-      expect(setCookieHeader).toMatch(/token=;/);
-      expect(setCookieHeader).toMatch(/Max-Age=0/);
+      expect(setCookieHeader).toMatch(TOKEN_EMPTY_REGEX);
+      expect(setCookieHeader).toMatch(MAX_AGE_ZERO_REGEX);
     });
   });
 });

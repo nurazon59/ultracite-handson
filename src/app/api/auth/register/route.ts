@@ -1,6 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { createToken, hashPassword, setAuthCookie } from "@/lib/auth";
+import { createToken, hashPassword } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+
+// トップレベルに定数として定義
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,8 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // メールアドレスの形式チェック
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!EMAIL_REGEX.test(email)) {
       return NextResponse.json(
         { error: "無効なメールアドレスです" },
         { status: 400 }
@@ -69,14 +71,13 @@ export async function POST(request: NextRequest) {
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "strict" as const,
       maxAge: 60 * 60 * 24,
       path: "/",
     });
 
     return response;
-  } catch (error) {
-    console.error("Registration error:", error);
+  } catch (_error) {
     return NextResponse.json({ error: "登録に失敗しました" }, { status: 500 });
   }
 }

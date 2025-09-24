@@ -14,11 +14,11 @@ import {
 } from "@/components/ui/card";
 import type { Bookmark } from "@/lib/types";
 
-interface BookmarkCardProps {
+type BookmarkCardProps = {
   bookmark: Bookmark;
   onEdit?: (bookmark: Bookmark) => void;
   isOwner?: boolean;
-}
+};
 
 export function BookmarkCard({
   bookmark,
@@ -44,7 +44,7 @@ export function BookmarkCard({
       }
 
       router.refresh();
-    } catch (error) {
+    } catch (_error) {
       alert("削除に失敗しました");
     } finally {
       setIsDeleting(false);
@@ -66,7 +66,7 @@ export function BookmarkCard({
       }
 
       router.refresh();
-    } catch (error) {
+    } catch (_error) {
       alert("更新に失敗しました");
     }
   }

@@ -17,10 +17,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Bookmark } from "@/lib/types";
 
-interface BookmarkFormProps {
+type BookmarkFormProps = {
   bookmark?: Partial<Bookmark>;
   onCancel?: () => void;
-}
+};
 
 export function BookmarkForm({ bookmark, onCancel }: BookmarkFormProps) {
   const router = useRouter();
@@ -61,8 +61,8 @@ export function BookmarkForm({ bookmark, onCancel }: BookmarkFormProps) {
 
       router.push("/bookmarks");
       router.refresh();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "保存に失敗しました");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "保存に失敗しました");
     } finally {
       setIsLoading(false);
     }

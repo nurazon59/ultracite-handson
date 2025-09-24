@@ -6,6 +6,9 @@ import {
   verifyToken,
 } from "@/lib/auth";
 
+// トップレベルに定数として定義
+const BCRYPT_HASH_REGEX = /^\$2[aby]?\$\d+\$/;
+
 describe("認証ユーティリティ", () => {
   describe("パスワードハッシュ化", () => {
     it("パスワードをハッシュ化できる", async () => {
@@ -13,7 +16,7 @@ describe("認証ユーティリティ", () => {
       const hash = await hashPassword(password);
 
       expect(hash).not.toBe(password);
-      expect(hash).toMatch(/^\$2[aby]?\$\d+\$/);
+      expect(hash).toMatch(BCRYPT_HASH_REGEX);
     });
 
     it("同じパスワードでも異なるハッシュが生成される", async () => {
@@ -89,7 +92,7 @@ describe("認証ユーティリティ", () => {
       };
 
       const token = await createToken(user);
-      const tamperedToken = token.slice(0, -10) + "tampered";
+      const tamperedToken = `${token.slice(0, -10)}tampered`;
 
       await expect(verifyToken(tamperedToken)).rejects.toThrow();
     });

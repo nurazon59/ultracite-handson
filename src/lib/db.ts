@@ -1,8 +1,8 @@
 import { PrismaClient } from "@/generated/prisma";
 
-interface GlobalWithPrisma {
+type GlobalWithPrisma = {
   prisma?: PrismaClient;
-}
+};
 
 const globalWithPrisma = global as GlobalWithPrisma;
 
