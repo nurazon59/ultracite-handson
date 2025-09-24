@@ -1,49 +1,58 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setIsLoading(true)
-    setError('')
+    event.preventDefault();
+    setIsLoading(true);
+    setError("");
 
-    const formData = new FormData(event.currentTarget)
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'ログインに失敗しました')
+        throw new Error(data.error || "ログインに失敗しました");
       }
 
-      router.push('/bookmarks')
-      router.refresh()
+      router.push("/bookmarks");
+      router.refresh();
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'ログインに失敗しました')
+      setError(
+        error instanceof Error ? error.message : "ログインに失敗しました"
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -63,37 +72,37 @@ export function LoginForm() {
           <div className="space-y-2">
             <Label htmlFor="email">メールアドレス</Label>
             <Input
+              disabled={isLoading}
               id="email"
               name="email"
-              type="email"
               placeholder="user@example.com"
               required
-              disabled={isLoading}
+              type="email"
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">パスワード</Label>
             <Input
+              disabled={isLoading}
               id="password"
               name="password"
-              type="password"
               required
-              disabled={isLoading}
+              type="password"
             />
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'ログイン中...' : 'ログイン'}
+          <Button className="w-full" disabled={isLoading} type="submit">
+            {isLoading ? "ログイン中..." : "ログイン"}
           </Button>
-          <p className="text-sm text-muted-foreground">
-            アカウントをお持ちでない方は{' '}
-            <Link href="/register" className="text-primary hover:underline">
+          <p className="text-muted-foreground text-sm">
+            アカウントをお持ちでない方は{" "}
+            <Link className="text-primary hover:underline" href="/register">
               新規登録
             </Link>
           </p>
         </CardFooter>
       </form>
     </Card>
-  )
+  );
 }

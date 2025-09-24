@@ -1,13 +1,13 @@
-import { PrismaClient } from '@/generated/prisma'
+import { PrismaClient } from "@/generated/prisma";
 
 interface GlobalWithPrisma {
-  prisma?: PrismaClient
+  prisma?: PrismaClient;
 }
 
-const globalWithPrisma = global as GlobalWithPrisma
+const globalWithPrisma = global as GlobalWithPrisma;
 
-export const prisma = globalWithPrisma.prisma ?? new PrismaClient()
+export const prisma = globalWithPrisma.prisma ?? new PrismaClient();
 
-if (process.env.NODE_ENV !== 'production') {
-  globalWithPrisma.prisma = prisma
+if (process.env.NODE_ENV !== "production") {
+  globalWithPrisma.prisma = prisma;
 }

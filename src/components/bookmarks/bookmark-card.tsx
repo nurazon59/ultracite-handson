@@ -1,63 +1,73 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { ExternalLink, Trash2, Edit, Eye, EyeOff } from 'lucide-react'
-import type { Bookmark } from '@/lib/types'
+import { Edit, ExternalLink, Eye, EyeOff, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { Bookmark } from "@/lib/types";
 
 interface BookmarkCardProps {
-  bookmark: Bookmark
-  onEdit?: (bookmark: Bookmark) => void
-  isOwner?: boolean
+  bookmark: Bookmark;
+  onEdit?: (bookmark: Bookmark) => void;
+  isOwner?: boolean;
 }
 
-export function BookmarkCard({ bookmark, onEdit, isOwner = true }: BookmarkCardProps) {
-  const router = useRouter()
-  const [isDeleting, setIsDeleting] = useState(false)
+export function BookmarkCard({
+  bookmark,
+  onEdit,
+  isOwner = true,
+}: BookmarkCardProps) {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   async function handleDelete() {
-    if (!confirm('このブックマークを削除しますか？')) {
-      return
+    if (!confirm("このブックマークを削除しますか？")) {
+      return;
     }
 
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
       const response = await fetch(`/api/bookmarks/${bookmark.id}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
 
       if (!response.ok) {
-        throw new Error('削除に失敗しました')
+        throw new Error("削除に失敗しました");
       }
 
-      router.refresh()
+      router.refresh();
     } catch (error) {
-      alert('削除に失敗しました')
+      alert("削除に失敗しました");
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
   }
 
   async function toggleRead() {
     try {
       const response = await fetch(`/api/bookmarks/${bookmark.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ isRead: !bookmark.isRead }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('更新に失敗しました')
+        throw new Error("更新に失敗しました");
       }
 
-      router.refresh()
+      router.refresh();
     } catch (error) {
-      alert('更新に失敗しました')
+      alert("更新に失敗しました");
     }
   }
 
@@ -67,10 +77,10 @@ export function BookmarkCard({ bookmark, onEdit, isOwner = true }: BookmarkCardP
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="line-clamp-2 text-lg">
             <a
-              href={bookmark.url}
-              target="_blank"
-              rel="noopener noreferrer"
               className="hover:underline"
+              href={bookmark.url}
+              rel="noopener noreferrer"
+              target="_blank"
             >
               {bookmark.title}
             </a>
@@ -81,40 +91,36 @@ export function BookmarkCard({ bookmark, onEdit, isOwner = true }: BookmarkCardP
             ) : (
               <Badge variant="outline">非公開</Badge>
             )}
-            {bookmark.isRead && (
-              <Badge variant="default">既読</Badge>
-            )}
+            {bookmark.isRead && <Badge variant="default">既読</Badge>}
           </div>
         </div>
       </CardHeader>
       <CardContent>
         {bookmark.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
+          <p className="line-clamp-2 text-muted-foreground text-sm">
             {bookmark.description}
           </p>
         )}
-        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="mt-2 flex items-center gap-2 text-muted-foreground text-xs">
           <a
+            className="flex items-center gap-1 hover:underline"
             href={bookmark.url}
-            target="_blank"
             rel="noopener noreferrer"
-            className="hover:underline flex items-center gap-1"
+            target="_blank"
           >
             <ExternalLink className="h-3 w-3" />
             {new URL(bookmark.url).hostname}
           </a>
-          {bookmark.user && (
-            <span>• {bookmark.user.name}</span>
-          )}
+          {bookmark.user && <span>• {bookmark.user.name}</span>}
         </div>
       </CardContent>
       {isOwner && (
         <CardFooter className="flex justify-end gap-2 pt-2">
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleRead}
             disabled={isDeleting}
+            onClick={toggleRead}
+            size="sm"
+            variant="ghost"
           >
             {bookmark.isRead ? (
               <EyeOff className="h-4 w-4" />
@@ -123,23 +129,23 @@ export function BookmarkCard({ bookmark, onEdit, isOwner = true }: BookmarkCardP
             )}
           </Button>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onEdit?.(bookmark)}
             disabled={isDeleting}
+            onClick={() => onEdit?.(bookmark)}
+            size="sm"
+            variant="ghost"
           >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDelete}
             disabled={isDeleting}
+            onClick={handleDelete}
+            size="sm"
+            variant="ghost"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </CardFooter>
       )}
     </Card>
-  )
+  );
 }

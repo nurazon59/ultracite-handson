@@ -1,6 +1,4 @@
 {
   "$schema": "https://www.ultracite.ai/s/2.0.0",
-  "extends": [
-    "ultracite"
-  ]
+  "extends": ["ultracite"]
 }
